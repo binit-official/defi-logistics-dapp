@@ -1,0 +1,12 @@
+node_modules
+/frontend/node_modules
+.env
+.DS_Store
+dist
+out
+coverage
+artifacts
+cache
+typechain-types
+.next
+.vscode
