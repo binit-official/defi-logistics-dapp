@@ -1,0 +1,352 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --bg-deep: #0b0e14;
+  --bg-panel: #151a23;
+  --primary: #6366f1;
+  --accent: #8b5cf6;
+  --success: #10b981;
+  --border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  background: radial-gradient(circle at 50% 0%, rgba(99,102,241,0.18), transparent 60%),
+              radial-gradient(circle at 50% 100%, rgba(139,92,246,0.18), transparent 60%),
+              var(--bg-deep);
+  color: white;
+  min-height: 100vh;
+}
+
+/* ================= APP CONTAINER ================= */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 70px;
+  width: 100%;
+  background: rgba(11,14,20,0.85);
+  backdrop-filter: blur(14px);
+  border-bottom: var(--border);
+  z-index: 1000;
+}
+
+.navbar-content {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ================= MAIN CONTENT ================= */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 110px 2rem 4rem; /* navbar gap */
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* ================= STATS ================= */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: linear-gradient(145deg, #0f172a, #020617);
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 1.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+}
+
+.stat-val {
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+/* ================= CREATE PANEL ================= */
+.create-section {
+  display: flex;
+  justify-content: center;
+}
+
+.create-panel {
+  width: 100%;
+  max-width: 680px;
+  background: linear-gradient(145deg, #020617, #0f172a);
+  border: 1px solid #1e293b;
+  border-radius: 24px;
+  padding: 2.5rem;
+}
+
+.create-panel p {
+  color: #9ca3af;
+}
+
+/* ================= INPUTS ================= */
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.input-box {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+}
+
+.input-box:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ================= BUTTONS ================= */
+.btn-main {
+  width: 100%;
+  padding: 0.9rem 1.6rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  cursor: pointer;
+}
+
+.btn-action {
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-start {
+  background: #facc15;
+  color: black;
+}
+
+.btn-confirm {
+  background: #22c55e;
+  color: black;
+}
+
+/* ================= SHIPMENTS ================= */
+.shipments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  gap: 10px;
+}
+
+.shipment-card {
+  background: linear-gradient(145deg, #020617, #0f172a);
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 2rem;
+}
+
+/* ================= PROGRESS ================= */
+.progress-track {
+  position: relative;
+  margin-top: 2rem;
+  padding-top: 2rem;
+}
+
+.progress-line-bg {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #334155;
+}
+
+.progress-line-fill {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  height: 4px;
+  background: var(--success);
+  transition: width 0.4s ease;
+}
+
+.step {
+  width: 33.33%;
+  text-align: center;
+  display: inline-block;
+}
+
+.step-dot {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #020617;
+  border: 2px solid #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step.active .step-dot {
+  background: var(--success);
+  color: black;
+}
+
+/* ================= LOADING ================= */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* ================= FLOATING BACKGROUND ================= */
+.floating-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Base icon style */
+.float-icon {
+  position: absolute;
+  font-size: 3rem;
+  opacity: 0.08;
+  animation: floatY 18s ease-in-out infinite,
+             driftX 25s ease-in-out infinite;
+}
+
+/* Individual positions */
+.eth    { top: 15%; left: 10%; }
+.dollar { top: 40%; left: 80%; }
+.truck  { top: 70%; left: 15%; }
+.box    { top: 20%; left: 55%; }
+.money  { top: 65%; left: 70%; }
+
+/* Variations */
+.delay1 {
+  animation-delay: 3s;
+  font-size: 2.5rem;
+  top: 85%;
+  left: 40%;
+}
+
+.delay2 {
+  animation-delay: 6s;
+  font-size: 3.2rem;
+  top: 10%;
+  left: 75%;
+}
+
+.delay3 {
+  animation-delay: 9s;
+  font-size: 2rem;
+  top: 50%;
+  left: 30%;
+}
+
+/* Vertical floating */
+@keyframes floatY {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-40px); }
+  100% { transform: translateY(0); }
+}
+
+/* Horizontal drift */
+@keyframes driftX {
+  0%   { margin-left: 0; }
+  50%  { margin-left: 40px; }
+  100% { margin-left: 0; }
+}
+
+/* Keep UI above background */
+.navbar,
+.main-content {
+  position: relative;
+  z-index: 2;
+}
