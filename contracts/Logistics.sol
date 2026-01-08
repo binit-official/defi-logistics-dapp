@@ -2,104 +2,133 @@
 pragma solidity 0.8.28;
 
 contract Logistics {
+    // Enums for Status and Categories
+    enum ShipmentStatus { PENDING, IN_TRANSIT, DELIVERED }
+    enum TransportMode { LAND, AIR, WATER }
+    enum ItemType { GENERAL, IRON, COAL, FOOD, FRAGILE }
 
-    // Define the Status levels
-    enum ShipmentStatus { PENDING, IN_TRANSIT, DELIVERED, PAID }
-
+    // Main Data Structure
     struct Shipment {
         address sender;
         address receiver;
-        uint256 pickupTime;
-        uint256 deliveryTime;
-        uint256 distance;
+        string itemName; 
+        ItemType itemType;
+        TransportMode mode;
+        uint256 weight;   // in KG
+        uint256 distance; // in KM
         uint256 price;
         ShipmentStatus status;
         bool isPaid;
     }
 
-    // Store all shipments in a list
+    // Storage
     mapping(address => Shipment[]) public shipments;
-    uint256 public totalShipments;
-
-    // Events for the frontend to listen to
-    event ShipmentCreated(address indexed sender, address indexed receiver, uint256 price, uint256 timestamp);
-    event ShipmentInTransit(address indexed sender, address indexed receiver, uint256 timestamp);
-    event ShipmentDelivered(address indexed sender, address indexed receiver, uint256 timestamp);
-    event ShipmentPaid(address indexed sender, address indexed receiver, uint256 amount);
-
-    constructor() {
-        totalShipments = 0;
-    }
-
-    // 1. Create a Shipment
-    function createShipment(address _receiver, uint256 _pickupTime, uint256 _distance, uint256 _price) public payable {
-        require(msg.value == _price, "Payment amount must match price");
-
-        Shipment memory shipment = Shipment(
-            msg.sender,
-            _receiver,
-            _pickupTime,
-            0,
-            _distance,
-            _price,
-            ShipmentStatus.PENDING,
-            true
-        );
-
-        shipments[msg.sender].push(shipment);
-        totalShipments++;
-
-        emit ShipmentCreated(msg.sender, _receiver, _price, block.timestamp);
-    }
-
-    // 2. Start Shipping (Update Status)
-    function startShipment(address _sender, uint256 _index) public {
-        Shipment storage shipment = shipments[_sender][_index];
-        
-        // Only the receiver or sender can update (depending on your logic, usually the carrier)
-        require(shipment.receiver == msg.sender || shipment.sender == msg.sender, "Not authorized");
-        require(shipment.status == ShipmentStatus.PENDING, "Shipment already started");
-
-        shipment.status = ShipmentStatus.IN_TRANSIT;
-        emit ShipmentInTransit(_sender, shipment.receiver, block.timestamp);
-    }
-
-    // 3. Complete Shipment
-    function completeShipment(address _sender, uint256 _index) public {
-        Shipment storage shipment = shipments[_sender][_index];
-        
-        require(shipment.receiver == msg.sender, "Only receiver can confirm delivery");
-        require(shipment.status == ShipmentStatus.IN_TRANSIT, "Shipment not in transit");
-
-        shipment.status = ShipmentStatus.DELIVERED;
-        shipment.deliveryTime = block.timestamp;
-
-        uint256 amount = shipment.price;
-        payable(shipment.sender).transfer(amount); // Release payment to sender/carrier
-
-        emit ShipmentDelivered(_sender, shipment.receiver, block.timestamp);
-        emit ShipmentPaid(_sender, shipment.receiver, amount);
-    }
-
-    // 4. Get Data for Frontend
-    function getShipment(address _sender, uint256 _index) public view returns (
-        address, address, uint256, uint256, uint256, uint256, ShipmentStatus, bool
-    ) {
-        Shipment memory shipment = shipments[_sender][_index];
-        return (
-            shipment.sender,
-            shipment.receiver,
-            shipment.pickupTime,
-            shipment.deliveryTime,
-            shipment.distance,
-            shipment.price,
-            shipment.status,
-            shipment.isPaid
-        );
-    }
     
-    // Function to get total shipment count for a user
-    function getShipmentsCount(address _sender) public view returns (uint256) {
-        return shipments[_sender].length;
+    // Global Tracking for Receivers (Maps receiver address to shipment location)
+    struct ShipmentRef {
+        address sender;
+        uint256 index;
+    }
+    mapping(address => ShipmentRef[]) public incomingShipments;
+
+    // Events
+    event ShipmentCreated(address indexed sender, address indexed receiver, uint256 price);
+    event ShipmentStatusChanged(address indexed sender, uint256 index, ShipmentStatus status);
+
+    // --- AUTOMATED PRICING ENGINE ---
+    function calculatePrice(
+        uint256 _distance, 
+        uint256 _weight, 
+        TransportMode _mode, 
+        ItemType _type
+    ) public pure returns (uint256) {
+        
+        // 1. Base Cost Calculation
+        uint256 base = 0.001 ether;
+        uint256 distCost = _distance * 0.0001 ether;
+        uint256 weightCost = _weight * 0.0002 ether;
+        uint256 rawPrice = base + distCost + weightCost;
+
+        // 2. Transport Mode Multiplier
+        uint256 modeMultiplier = 100;
+        if (_mode == TransportMode.LAND) modeMultiplier = 100;   // 1.0x (Standard)
+        if (_mode == TransportMode.AIR) modeMultiplier = 300;    // 3.0x (Fast/Expensive)
+        if (_mode == TransportMode.WATER) modeMultiplier = 50;   // 0.5x (Slow/Cheap)
+
+        // 3. Item Type Multiplier
+        uint256 typeMultiplier = 100;
+        if (_type == ItemType.GENERAL) typeMultiplier = 100;
+        if (_type == ItemType.IRON) typeMultiplier = 120;    // +20% (Heavy handling)
+        if (_type == ItemType.COAL) typeMultiplier = 110;    // +10% (Bulk)
+        if (_type == ItemType.FOOD) typeMultiplier = 150;    // +50% (Refrigeration)
+        if (_type == ItemType.FRAGILE) typeMultiplier = 200; // +100% (Careful handling)
+
+        // Final Calculation
+        return (rawPrice * modeMultiplier * typeMultiplier) / 10000;
+    }
+
+    // --- ACTIONS ---
+
+    function createShipment(
+        address _receiver, 
+        string memory _itemName,
+        TransportMode _mode,
+        ItemType _type,
+        uint256 _distance, 
+        uint256 _weight
+    ) public payable {
+        uint256 cost = calculatePrice(_distance, _weight, _mode, _type);
+        require(msg.value >= cost, "Insufficient funds provided for calculated price");
+
+        Shipment memory newShipment = Shipment({
+            sender: msg.sender,
+            receiver: _receiver,
+            itemName: _itemName,
+            itemType: _type,
+            mode: _mode,
+            weight: _weight,
+            distance: _distance,
+            price: cost,
+            status: ShipmentStatus.PENDING,
+            isPaid: true
+        });
+
+        // Add to Sender's List
+        uint256 index = shipments[msg.sender].length;
+        shipments[msg.sender].push(newShipment);
+        
+        // Add to Receiver's Global Tracking
+        incomingShipments[_receiver].push(ShipmentRef(msg.sender, index));
+        
+        emit ShipmentCreated(msg.sender, _receiver, cost);
+    }
+
+    function startShipment(uint256 _index) public {
+        Shipment storage s = shipments[msg.sender][_index];
+        require(s.status == ShipmentStatus.PENDING, "Shipment is not pending");
+        s.status = ShipmentStatus.IN_TRANSIT;
+        emit ShipmentStatusChanged(msg.sender, _index, ShipmentStatus.IN_TRANSIT);
+    }
+
+    function completeShipment(address _sender, uint256 _index) public {
+        Shipment storage s = shipments[_sender][_index];
+        require(msg.sender == s.receiver, "Only the designated receiver can confirm");
+        require(s.status == ShipmentStatus.IN_TRANSIT, "Shipment not in transit");
+        
+        s.status = ShipmentStatus.DELIVERED;
+        
+        // ESCROW RELEASE: Transfer funds to the sender (carrier)
+        payable(s.sender).transfer(s.price); 
+        
+        emit ShipmentStatusChanged(_sender, _index, ShipmentStatus.DELIVERED);
+    }
+
+    // --- VIEW HELPERS ---
+    function getSenderCount(address _user) public view returns (uint256) {
+        return shipments[_user].length;
+    }
+
+    function getReceiverCount(address _user) public view returns (uint256) {
+        return incomingShipments[_user].length;
     }
 }
